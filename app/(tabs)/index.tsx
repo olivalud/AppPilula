@@ -192,10 +192,11 @@ const styles = StyleSheet.create({
     marginLeft: -69,
     top: 301,
     justifyContent: "center",
-    padding: 10,
+    padding: 0,
     alignItems: "center",
     position: "absolute",
-    left: "50%"
+    left: "50%",
+    backgroundColor: 'transparent'
   },
   plula: {
     fontSize: 30,
