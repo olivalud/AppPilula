@@ -4,6 +4,7 @@ import { Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextIn
 import { SafeAreaView } from "react-native-safe-area-context";
 import BackgroundLogin from '../../src/assets/background-login.png';
 import Logo from '../../src/assets/logo.png';
+import { MaskedTextInput } from "react-native-mask-text";
 
 const InterfaceDeLoginImage = () => {
   const router = useRouter();
@@ -17,7 +18,7 @@ const InterfaceDeLoginImage = () => {
               <Image source={Logo} style={styles.logo1Icon} resizeMode="contain" />
               <Text style={styles.plula}>Pílula+</Text>
             </View>
-            <TextInput style={styles.input} placeholder="CPF" keyboardType="numeric" />
+            <MaskedTextInput style={styles.input} placeholder="CPF" keyboardType="numeric" mask="999.999.999-99" onChangeText={(text, rawText) => { console.log(text); console.log(rawText);}}  />
             <TextInput style={styles.input} placeholder="Senha" secureTextEntry />
             <Pressable style={styles.forgotPasswordButton}>
               <Text style={styles.esqueceuASenha}>Esqueceu a senha?</Text>
