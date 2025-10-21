@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     marginTop: 25
   },
   fazerLogin: {
-    fontSize: 18,
+    fontSize: 25,
     fontWeight: '500',
     color: "rgba(0, 0, 0, 0.9)"
   },

@@ -17,16 +17,8 @@ const InterfaceDeLoginImage = () => {
               <Image source={Logo} style={styles.logo1Icon} resizeMode="contain" />
               <Text style={styles.plula}>Pílula+</Text>
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="CPF"
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Senha"
-              secureTextEntry
-            />
+            <TextInput style={styles.input} placeholder="CPF" keyboardType="numeric" />
+            <TextInput style={styles.input} placeholder="Senha" secureTextEntry />
             <Pressable style={styles.forgotPasswordButton}>
               <Text style={styles.esqueceuASenha}>Esqueceu a senha?</Text>
             </Pressable>
@@ -86,8 +78,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10
   },
   forgotPasswordButton: {
-    alignSelf: 'flex-end',
-    marginRight: '5%',
     marginBottom: 40
   },
   esqueceuASenha: {
