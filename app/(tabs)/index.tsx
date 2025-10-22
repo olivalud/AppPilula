@@ -1,98 +1,135 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useRouter } from "expo-router";
+import * as React from "react";
+import {
+  Image,
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import BackgroundLogin from "../../src/assets/background-login.png";
+import Logo from "../../src/assets/logo.png";
+import { MaskedTextInput } from "react-native-mask-text";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const InterfaceDeLoginImage = () => {
+  const router = useRouter();
 
-export default function HomeScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
-
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.interfaceDeLoginImage}>
+      <ImageBackground source={BackgroundLogin} style={styles.backgroundIcon} resizeMode="cover">
+        <SafeAreaView style={styles.view}>
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <View style={styles.headerContainer}>
+              <Image source={Logo} style={styles.logo1Icon} resizeMode="contain"/>
+              <Text style={styles.plula}>Pílula+</Text>
+            </View>
+            <MaskedTextInput style={styles.input} placeholder="CPF" keyboardType="numeric" mask="999.999.999-99" onChangeText={(text, rawText) => { console.log(text); console.log(rawText); }}/>
+            <TextInput style={styles.input} placeholder="Senha" secureTextEntry/>
+            <Pressable style={styles.forgotPasswordButton}>
+              <Text style={styles.esqueceuASenha}>Esqueceu a senha?</Text>
+            </Pressable>
+            <Pressable style={styles.buttonLogin} onPress={() => {}}>
+              <Text style={styles.entrar}>Entrar</Text>
+            </Pressable>
+            <Pressable style={styles.registerButton} onPress={() => {router.push("/cadastro");}}>
+              <Text style={styles.cadastreSe}>Cadastre-se</Text>
+            </Pressable>
+            <Text style={styles.v100}>v1.0.0</Text>
+          </ScrollView>
+        </SafeAreaView>
+      </ImageBackground>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  interfaceDeLoginImage: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  view: {
+    width: "100%",
+    flex: 1,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  backgroundIcon: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
+  logo1Icon: {
+    width: 200,
+    height: 150,
+  },
+  headerContainer: {
+    alignItems: "center",
+    marginBottom: 40,
+  },
+  plula: {
+    fontSize: 45,
+    fontFamily: "Inter-Medium",
+    fontWeight: "500",
+    color: "#000",
+    marginTop: 10,
+  },
+  input: {
+    width: "90%",
+    height: 60,
+    borderBottomWidth: 2,
+    borderColor: "rgba(0, 0, 0, 0.9)",
+    fontSize: 26,
+    marginBottom: 25,
+    paddingHorizontal: 10,
+  },
+  forgotPasswordButton: {
+    marginBottom: 40,
+  },
+  esqueceuASenha: {
+    fontSize: 22,
+    color: "rgba(0, 0, 0, 0.9)",
+    fontFamily: "Inter-Medium",
+    fontWeight: "500",
+  },
+  buttonLogin: {
+    elevation: 4,
+    borderRadius: 32,
+    backgroundColor: "#fff",
+    width: "90%",
+    height: 70,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 25,
+  },
+  entrar: {
+    fontSize: 30,
+    color: "rgba(0, 0, 0, 0.9)",
+    fontFamily: "Inter-Medium",
+    fontWeight: "500",
+  },
+  registerButton: {
+    marginBottom: 50,
+  },
+  cadastreSe: {
+    fontSize: 22,
+    color: "rgba(0, 0, 0, 0.9)",
+    fontFamily: "Inter-Medium",
+    fontWeight: "500",
+  },
+  v100: {
+    fontSize: 20,
+    color: "#000",
+    fontFamily: "Inter-Medium",
+    fontWeight: "500",
+    position: "absolute",
+    bottom: 15,
   },
 });
+
+export default InterfaceDeLoginImage;
