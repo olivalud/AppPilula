@@ -71,8 +71,8 @@ const InterfaceDeCadastro = () => {
         <View style={styles.passwordContainer}>
                       <TextInput style={styles.inputField} placeholder="Confirmar Senha" value={confirmPassword} onChangeText={setConfirmPassword}
                         secureTextEntry={!isConfirmPasswordVisible}/>
-                      <Pressable onPress={() => setPasswordVisible(!isConfirmPasswordVisible)} style={styles.eyeIcon}>
-                        <MaterialCommunityIcons name={isPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)"/>
+                      <Pressable onPress={() => setConfirmPasswordVisible(!isConfirmPasswordVisible)} style={styles.eyeIcon}>
+                        <MaterialCommunityIcons name={isConfirmPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)"/>
                       </Pressable>
                     </View>
 
