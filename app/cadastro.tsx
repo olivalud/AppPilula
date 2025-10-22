@@ -104,7 +104,7 @@ const InterfaceDeCadastro = () => {
           <Text style={styles.criarContaText}>Criar Conta</Text>
         </Pressable>
 
-        <Pressable style={styles.buttonReturn} onPress={() => router.back()}>
+        <Pressable style={styles.buttonReturn} onPress={() => {if (router.canGoBack()) { router.back(); } else { router.replace("/"); }}}>
           <Text style={styles.fazerLogin}>Fazer Login</Text>
         </Pressable>
 
