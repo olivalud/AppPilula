@@ -61,44 +61,20 @@ const InterfaceDeCadastro = () => {
           textContentType="emailAddress"
         />
         <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.inputField}
-            placeholder="Senha"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!isPasswordVisible}
-          />
-          <Pressable
-            onPress={() => setPasswordVisible(!isPasswordVisible)}
-            style={styles.eyeIcon}
-          >
-            <MaterialCommunityIcons
-              name={isPasswordVisible ? "eye" : "eye-off"}
-              size={26}
-              color="rgba(0, 0, 0, 0.6)"
-            />
-          </Pressable>
-        </View>
+                      <TextInput style={styles.inputField} placeholder="Senha" value={password} onChangeText={setPassword}
+                        secureTextEntry={!isPasswordVisible}/>
+                      <Pressable onPress={() => setPasswordVisible(!isPasswordVisible)} style={styles.eyeIcon}>
+                        <MaterialCommunityIcons name={isPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)"/>
+                      </Pressable>
+                    </View>
 
         <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.inputField}
-            placeholder="Confirmar Senha"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={!isConfirmPasswordVisible}
-          />
-          <Pressable
-            onPress={() => setConfirmPasswordVisible(!isConfirmPasswordVisible)}
-            style={styles.eyeIcon}
-          >
-            <MaterialCommunityIcons
-              name={isConfirmPasswordVisible ? "eye" : "eye-off"}
-              size={26}
-              color="rgba(0, 0, 0, 0.6)"
-            />
-          </Pressable>
-        </View>
+                      <TextInput style={styles.inputField} placeholder="Confirmar Senha" value={confirmPassword} onChangeText={setConfirmPassword}
+                        secureTextEntry={!isConfirmPasswordVisible}/>
+                      <Pressable onPress={() => setPasswordVisible(!isConfirmPasswordVisible)} style={styles.eyeIcon}>
+                        <MaterialCommunityIcons name={isPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)"/>
+                      </Pressable>
+                    </View>
 
         <Pressable style={styles.buttonCreate} onPress={() => {}}>
           <Text style={styles.criarContaText}>Criar Conta</Text>

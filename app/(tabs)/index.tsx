@@ -19,7 +19,7 @@ const [password, setPassword] = React.useState('');
     <View style={styles.interfaceDeLoginImage}>
       <ImageBackground source={BackgroundLogin} style={styles.backgroundIcon} resizeMode="cover">
         <SafeAreaView style={styles.view}>
-          <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ScrollView contentContainerStyle={styles.scrollContent} bounces={false} showsHorizontalScrollIndicator={false}>
             <View style={styles.headerContainer}>
               <Image source={Logo} style={styles.logo1Icon} resizeMode="contain"/>
               <Text style={styles.plula}>Pílula+</Text>
@@ -55,7 +55,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   view: {
-    width: "100%",
     flex: 1,
     ...Platform.select({
     web: {
@@ -64,7 +63,8 @@ const styles = StyleSheet.create({
   })
   },
   backgroundIcon: {
-    flex: 1,
+    width: "100%", 
+    height: "100%",
   },
   scrollContent: {
     flexGrow: 1,
