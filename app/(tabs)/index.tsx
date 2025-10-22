@@ -17,7 +17,7 @@ const [password, setPassword] = React.useState('');
 
   return (
     <View style={styles.interfaceDeLoginImage}>
-      <ImageBackground source={BackgroundLogin} style={styles.backgroundIcon} resizeMode="cover">
+      <ImageBackground source={BackgroundLogin} style={styles.backgroundIcon} resizeMode="cover" imageStyle={{ opacity: 0.35 }}>
         <SafeAreaView style={styles.view}>
           <ScrollView contentContainerStyle={styles.scrollContent} bounces={false} showsHorizontalScrollIndicator={false}>
             <View style={styles.headerContainer}>
@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
   backgroundIcon: {
     width: "100%", 
     height: "100%",
+    position: 'absolute',
   },
   scrollContent: {
     flexGrow: 1,
