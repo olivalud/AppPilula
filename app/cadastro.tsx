@@ -1,12 +1,19 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import * as React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Logo from '../src/assets/logo.png';
 import { MaskedTextInput } from "react-native-mask-text";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const InterfaceDeCadastro = () => {
   const router = useRouter();
+
+const [password, setPassword] = React.useState('');
+  const [isPasswordVisible, setPasswordVisible] = React.useState(false);
+  
+const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [isConfirmPasswordVisible, setConfirmPasswordVisible] = React.useState(false);
 
   return (
     <LinearGradient
@@ -22,9 +29,20 @@ const InterfaceDeCadastro = () => {
 
         <TextInput style={styles.input} placeholder="Nome Completo" />
         <MaskedTextInput style={styles.input} placeholder="CPF" keyboardType="numeric" mask="999.999.999-99" onChangeText={(text, rawText) => { console.log(text); console.log(rawText); }}/>
-        <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" />
-        <TextInput style={styles.input} placeholder="Senha" secureTextEntry />
-        <TextInput style={styles.input} placeholder="Confirmar Senha" secureTextEntry />
+        <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress"/>
+        <View style={styles.passwordContainer}>
+          <TextInput style={styles.inputField} placeholder="Senha" value={password} onChangeText={setPassword} secureTextEntry={!isPasswordVisible}/>
+          <Pressable onPress={() => setPasswordVisible(!isPasswordVisible)} style={styles.eyeIcon}>
+              <MaterialCommunityIcons name={isPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)"/>
+                </Pressable>
+                  </View>
+        <View style={styles.passwordContainer}>
+          <TextInput style={styles.inputField} placeholder="Confirmar Senha" value={confirmPassword} onChangeText={setConfirmPassword}
+          secureTextEntry={!isConfirmPasswordVisible}/>
+          <Pressable onPress={() => setConfirmPasswordVisible(!isConfirmPasswordVisible)} style={styles.eyeIcon}>
+            <MaterialCommunityIcons name={isConfirmPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)"/>
+              </Pressable>
+                </View>
 
         <Pressable style={styles.buttonCreate} onPress={() => { }}>
           <Text style={styles.criarContaText}>Criar Conta</Text>
@@ -69,6 +87,24 @@ const styles = StyleSheet.create({
     fontSize: 22,
     marginBottom: 20,
     paddingHorizontal: 10
+  },
+  passwordContainer: {
+    flexDirection: 'row',       
+    alignItems: 'center',     
+    width: '90%',
+    height: 60,
+    borderBottomWidth: 2,
+    borderColor: "rgba(0, 0, 0, 0.9)",
+    marginBottom: 25,
+  },
+  inputField: {
+    flex: 1,               
+    height: '100%',
+    fontSize: 26,
+    paddingHorizontal: 10,
+  },
+  eyeIcon: {
+    padding: 10, 
   },
   buttonCreate: {
     elevation: 4,

@@ -5,9 +5,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import BackgroundLogin from "../../src/assets/background-login.png";
 import Logo from "../../src/assets/logo.png";
 import { MaskedTextInput } from "react-native-mask-text";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const InterfaceDeLoginImage = () => {
   const router = useRouter();
+
+const [password, setPassword] = React.useState('');
+  const [isPasswordVisible, setPasswordVisible] = React.useState(false);
 
   return (
     <View style={styles.interfaceDeLoginImage}>
@@ -19,7 +23,13 @@ const InterfaceDeLoginImage = () => {
               <Text style={styles.plula}>Pílula+</Text>
             </View>
             <MaskedTextInput style={styles.input} placeholder="CPF" keyboardType="numeric" mask="999.999.999-99" onChangeText={(text, rawText) => { console.log(text); console.log(rawText); }}/>
-            <TextInput style={styles.input} placeholder="Senha" secureTextEntry/>
+            <View style={styles.passwordContainer}>
+              <TextInput style={styles.inputField} placeholder="Senha" value={password} onChangeText={setPassword}
+                secureTextEntry={!isPasswordVisible}/>
+              <Pressable onPress={() => setPasswordVisible(!isPasswordVisible)} style={styles.eyeIcon}>
+                <MaterialCommunityIcons name={isPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)"/>
+              </Pressable>
+            </View>
             <Pressable style={styles.forgotPasswordButton}>
               <Text style={styles.esqueceuASenha}>Esqueceu a senha?</Text>
             </Pressable>
@@ -78,6 +88,24 @@ const styles = StyleSheet.create({
     fontSize: 26,
     marginBottom: 25,
     paddingHorizontal: 10,
+  },
+  passwordContainer: {
+    flexDirection: 'row',       
+    alignItems: 'center',     
+    width: '90%',
+    height: 60,
+    borderBottomWidth: 2,
+    borderColor: "rgba(0, 0, 0, 0.9)",
+    marginBottom: 25,
+  },
+  inputField: {
+    flex: 1,               
+    height: '100%',
+    fontSize: 26,
+    paddingHorizontal: 10,
+  },
+  eyeIcon: {
+    padding: 10, 
   },
   forgotPasswordButton: {
     marginBottom: 40,
