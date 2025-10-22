@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import * as React from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput } from "react-native";
 import Logo from '../src/assets/logo.png';
+import { MaskedTextInput } from "react-native-mask-text";
 
 const InterfaceDeCadastro = () => {
   const router = useRouter();
@@ -20,7 +21,7 @@ const InterfaceDeCadastro = () => {
         <Text style={styles.crieSuaConta}>Crie sua conta</Text>
 
         <TextInput style={styles.input} placeholder="Nome Completo" />
-        <TextInput style={styles.input} placeholder="CPF" keyboardType="numeric" />
+        <MaskedTextInput style={styles.input} placeholder="CPF" keyboardType="numeric" mask="999.999.999-99" onChangeText={(text, rawText) => { console.log(text); console.log(rawText); }}/>
         <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" />
         <TextInput style={styles.input} placeholder="Senha" secureTextEntry />
         <TextInput style={styles.input} placeholder="Confirmar Senha" secureTextEntry />

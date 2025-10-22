@@ -1,15 +1,6 @@
 import { useRouter } from "expo-router";
 import * as React from "react";
-import {
-  Image,
-  ImageBackground,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import {Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View,} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BackgroundLogin from "../../src/assets/background-login.png";
 import Logo from "../../src/assets/logo.png";
