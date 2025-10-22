@@ -1,11 +1,13 @@
 import { useRouter } from "expo-router";
 import * as React from "react";
-import {Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View,} from "react-native";
+import {Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Platform} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BackgroundLogin from "../../src/assets/background-login.png";
 import Logo from "../../src/assets/logo.png";
 import { MaskedTextInput } from "react-native-mask-text";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+const iconSize = Platform.OS === 'web' ? 22 : 30;
 
 const InterfaceDeLoginImage = () => {
   const router = useRouter();
@@ -41,6 +43,7 @@ const [password, setPassword] = React.useState('');
             </Pressable>
             <Text style={styles.v100}>v1.0.0</Text>
           </ScrollView>
+          
         </SafeAreaView>
       </ImageBackground>
     </View>
@@ -54,6 +57,11 @@ const styles = StyleSheet.create({
   view: {
     width: "100%",
     flex: 1,
+    ...Platform.select({
+    web: {
+      justifyContent: 'center'
+    }
+  })
   },
   backgroundIcon: {
     flex: 1,
@@ -64,14 +72,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingBottom: 30,
+    ...Platform.select({
+      web: {
+        maxWidth: 500,
+        width: '100%', 
+        marginHorizontal: 'auto',
+        paddingBottom: 50,
+      }
+    })
   },
   logo1Icon: {
     width: 200,
     height: 150,
+    ...Platform.select({
+      web: { // Logo menor no web
+        width: 150,
+        height: 112,
+      }
+    })
   },
   headerContainer: {
     alignItems: "center",
     marginBottom: 40,
+    ...Platform.select({ web: { marginBottom: 25 } })
   },
   plula: {
     fontSize: 45,
@@ -79,6 +102,12 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#000",
     marginTop: 10,
+    ...Platform.select({
+      web: { // Fonte bem menor no web
+        fontSize: 32,
+        marginTop: 5,
+      }
+    })
   },
   input: {
     width: "90%",
@@ -88,6 +117,13 @@ const styles = StyleSheet.create({
     fontSize: 26,
     marginBottom: 25,
     paddingHorizontal: 10,
+    ...Platform.select({
+      web: { // Input com altura e fonte padrão web
+        height: 44,
+        fontSize: 16,
+        marginBottom: 15,
+      }
+    })
   },
   passwordContainer: {
     flexDirection: 'row',       
@@ -97,24 +133,46 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderColor: "rgba(0, 0, 0, 0.9)",
     marginBottom: 25,
+    ...Platform.select({
+      web: { // O container deve ter a mesma altura do input
+        height: 44,
+        marginBottom: 15,
+      }
+    })
   },
   inputField: {
     flex: 1,               
     height: '100%',
     fontSize: 26,
     paddingHorizontal: 10,
+    ...Platform.select({
+      web: { // Fonte do input
+        fontSize: 16,
+      }
+    })
   },
   eyeIcon: {
     padding: 10, 
+    ...Platform.select({
+      web: {
+        padding: 8, // Área de clique um pouco menor
+      }
+    })
   },
   forgotPasswordButton: {
     marginBottom: 40,
+    ...Platform.select({ web: { marginBottom: 30 } })
   },
   esqueceuASenha: {
     fontSize: 22,
     color: "rgba(0, 0, 0, 0.9)",
     fontFamily: "Inter-Medium",
     fontWeight: "500",
+    ...Platform.select({
+      web: { // Fonte padrão web
+        fontSize: 14,
+      }
+    })
   },
   buttonLogin: {
     elevation: 4,
@@ -125,12 +183,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 25,
+    ...Platform.select({
+      web: { // Botão com altura padrão web
+        height: 48,
+        marginBottom: 20,
+      }
+    })
   },
   entrar: {
     fontSize: 30,
     color: "rgba(0, 0, 0, 0.9)",
     fontFamily: "Inter-Medium",
     fontWeight: "500",
+    ...Platform.select({
+      web: { // Fonte do botão
+        fontSize: 18,
+      }
+    })
   },
   registerButton: {
     marginBottom: 50,
@@ -140,6 +209,11 @@ const styles = StyleSheet.create({
     color: "rgba(0, 0, 0, 0.9)",
     fontFamily: "Inter-Medium",
     fontWeight: "500",
+    ...Platform.select({
+      web: { // Fonte padrão web
+        fontSize: 14,
+      }
+    })
   },
   v100: {
     fontSize: 20,
@@ -148,6 +222,11 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     position: "absolute",
     bottom: 15,
+    ...Platform.select({
+      web: { // Fonte menor
+        fontSize: 12,
+      }
+    })
   },
 });
 
