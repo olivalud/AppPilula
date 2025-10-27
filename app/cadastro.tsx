@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     marginTop: 25,
   },
   fazerLogin: {
-    fontSize: 25,
+    fontSize: 20,
     fontWeight: "500",
     color: "rgba(0, 0, 0, 0.9)",
   },
@@ -170,7 +170,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#000",
     fontWeight: "500",
-    marginTop: 30,
+    position: "absolute",
+    bottom: 10,
   },
 });
 

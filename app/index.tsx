@@ -35,7 +35,7 @@ const [password, setPassword] = React.useState('');
             <Pressable style={styles.forgotPasswordButton} onPress={() => {router.push("/redefinirSenha");}}>
               <Text style={styles.esqueceuASenha}>Esqueceu a senha?</Text>
             </Pressable>
-            <Pressable style={styles.buttonLogin} onPress={() => {}}>
+            <Pressable style={styles.buttonLogin} onPress={() => {router.push("/home");}}>
               <Text style={styles.entrar}>Entrar</Text>
             </Pressable>
             <Pressable style={styles.registerButton} onPress={() => {router.push("/cadastro");}}>
