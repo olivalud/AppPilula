@@ -2,8 +2,8 @@ import { useRouter } from "expo-router";
 import * as React from "react";
 import {Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Platform} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import BackgroundLogin from "../../src/assets/background-login.png";
-import Logo from "../../src/assets/logo.png";
+import BackgroundLogin from "../src/assets/background-login.png";
+import Logo from "../src/assets/logo.png";
 import { MaskedTextInput } from "react-native-mask-text";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -32,7 +32,7 @@ const [password, setPassword] = React.useState('');
                 <MaterialCommunityIcons name={isPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)"/>
               </Pressable>
             </View>
-            <Pressable style={styles.forgotPasswordButton}>
+            <Pressable style={styles.forgotPasswordButton} onPress={() => {router.push("/redefinirSenha");}}>
               <Text style={styles.esqueceuASenha}>Esqueceu a senha?</Text>
             </Pressable>
             <Pressable style={styles.buttonLogin} onPress={() => {}}>
@@ -99,7 +99,6 @@ const styles = StyleSheet.create({
   },
   plula: {
     fontSize: 45,
-    fontFamily: "Inter-Medium",
     fontWeight: "500",
     color: "#000",
     marginTop: 10,
@@ -167,7 +166,6 @@ const styles = StyleSheet.create({
   esqueceuASenha: {
     fontSize: 22,
     color: "rgba(0, 0, 0, 0.9)",
-    fontFamily: "Inter-Medium",
     fontWeight: "500",
     ...Platform.select({
       web: { // Fonte padrão web
@@ -194,7 +192,6 @@ const styles = StyleSheet.create({
   entrar: {
     fontSize: 30,
     color: "rgba(0, 0, 0, 0.9)",
-    fontFamily: "Inter-Medium",
     fontWeight: "500",
     ...Platform.select({
       web: { // Fonte do botão
@@ -208,7 +205,6 @@ const styles = StyleSheet.create({
   cadastreSe: {
     fontSize: 22,
     color: "rgba(0, 0, 0, 0.9)",
-    fontFamily: "Inter-Medium",
     fontWeight: "500",
     ...Platform.select({
       web: { // Fonte padrão web
@@ -219,7 +215,6 @@ const styles = StyleSheet.create({
   v100: {
     fontSize: 20,
     color: "#000",
-    fontFamily: "Inter-Medium",
     fontWeight: "500",
     position: "absolute",
     bottom: 15,
