@@ -15,15 +15,8 @@ import Logo from "../src/assets/logo.png";
 import { MaskedTextInput } from "react-native-mask-text";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const InterfaceDeCadastro = () => {
+const InterfaceDeRedefinirSenha = () => {
   const router = useRouter();
-
-  const [password, setPassword] = React.useState("");
-  const [isPasswordVisible, setPasswordVisible] = React.useState(false);
-
-  const [confirmPassword, setConfirmPassword] = React.useState("");
-  const [isConfirmPasswordVisible, setConfirmPasswordVisible] =
-    React.useState(false);
 
   return (
     <LinearGradient
@@ -39,19 +32,9 @@ const InterfaceDeCadastro = () => {
         showsVerticalScrollIndicator={false}
       >
         <Image source={Logo} style={styles.logo1Icon} resizeMode="contain" />
-        <Text style={styles.crieSuaConta}>Crie sua conta</Text>
+        <Text style={styles.crieSuaConta}>Recuperar Senha</Text>
+        <Text style={styles.textoSecund}>Enviaremos um link para {"\n"}redefinir sua senha</Text>
 
-        <TextInput style={styles.input} placeholder="Nome Completo" />
-        <MaskedTextInput
-          style={styles.input}
-          placeholder="CPF"
-          keyboardType="numeric"
-          mask="999.999.999-99"
-          onChangeText={(text, rawText) => {
-            console.log(text);
-            console.log(rawText);
-          }}
-        />
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -60,24 +43,8 @@ const InterfaceDeCadastro = () => {
           autoComplete="email"
           textContentType="emailAddress"
         />
-        <View style={styles.passwordContainer}>
-                      <TextInput style={styles.inputField} placeholder="Senha" value={password} onChangeText={setPassword}
-                        secureTextEntry={!isPasswordVisible}/>
-                      <Pressable onPress={() => setPasswordVisible(!isPasswordVisible)} style={styles.eyeIcon}>
-                        <MaterialCommunityIcons name={isPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)"/>
-                      </Pressable>
-                    </View>
-
-        <View style={styles.passwordContainer}>
-                      <TextInput style={styles.inputField} placeholder="Confirmar Senha" value={confirmPassword} onChangeText={setConfirmPassword}
-                        secureTextEntry={!isConfirmPasswordVisible}/>
-                      <Pressable onPress={() => setConfirmPasswordVisible(!isConfirmPasswordVisible)} style={styles.eyeIcon}>
-                        <MaterialCommunityIcons name={isConfirmPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)"/>
-                      </Pressable>
-                    </View>
-
-        <Pressable style={styles.buttonCreate} onPress={() => {}}>
-          <Text style={styles.criarContaText}>Criar Conta</Text>
+        <Pressable style={styles.buttonSend} onPress={() => {}}>
+          <Text style={styles.enviarText}>Enviar</Text>
         </Pressable>
 
         <Pressable style={styles.buttonReturn} onPress={() => {if (router.canGoBack()) { router.back(); } else { router.replace("/"); }}}>
@@ -112,6 +79,13 @@ const styles = StyleSheet.create({
     color: "rgba(0, 0, 0, 0.9)",
     marginBottom: 30,
   },
+  textoSecund: {
+    textAlign: "center",
+    marginBottom: 25,
+    fontSize: 20,
+    fontWeight: "500",
+    lineHeight: 25,
+  },
   input: {
     width: "80%",
     height: 60,
@@ -143,7 +117,7 @@ const styles = StyleSheet.create({
     right: 0,
     padding: 10,
   },
-  buttonCreate: {
+  buttonSend: {
     elevation: 4,
     borderRadius: 32,
     backgroundColor: "#fff",
@@ -153,7 +127,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
   },
-  criarContaText: {
+  enviarText: {
     fontSize: 30,
     fontWeight: "500",
     color: "rgba(0, 0, 0, 0.9)",
@@ -171,8 +145,8 @@ const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "500",
     position: "absolute",
-    bottom: 10,
+    bottom: 15,
   },
 });
 
-export default InterfaceDeCadastro;
+export default InterfaceDeRedefinirSenha;
