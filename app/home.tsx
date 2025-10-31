@@ -5,13 +5,12 @@ import {
   StyleSheet, 
   Pressable,
   ScrollView,
-  TextInput // 1. Importado novamente para a busca
+  TextInput
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { mockMedicamentos, mockResumo } from './mockData'; 
-// REMOVEMOS a importação do LinearGradient
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -38,36 +37,30 @@ export default function HomeScreen() {
   const dataAtual = `${diaSemana}, ${dia} de ${mes}`;
 
   return (
-    // 2. Fundo do container volta a ser o claro
     <SafeAreaView style={styles.container} edges={['top']}>
       
-      {/* ===== ÁREA DO CABEÇALHO (FUNDO CLARO) ===== */}
-      {/* 3. Voltamos a usar uma <View> normal */}
       <View style={styles.headerContainer}>
-        {/* Parte 1: Info do Usuário e Logout */}
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <MaterialCommunityIcons 
-              name="account-circle" 
-              size={50}
-              // 4. Cores dos ícones e textos voltam ao original
-              color="#5CA498"
-            />
-            <View style={styles.headerInfo}>
-              <Text style={styles.userName}>Usuário</Text>
-              <Text style={styles.date}>{dataAtual}</Text>
-            </View>
-          </View>
-          <Pressable onPress={() => router.replace('/')}>
-            <MaterialCommunityIcons 
-              name="logout" 
-              size={35}
-              color="#555"
-            />
-          </Pressable>
+          <View style={styles.headerLeft}>
+            <MaterialCommunityIcons 
+              name="account-circle" 
+              size={50}
+              color="#5CA498"
+            />
+            <View style={styles.headerInfo}>
+              <Text style={styles.userName}>Usuário</Text>
+              <Text style={styles.date}>{dataAtual}</Text>
+            </View>
+          </View>
+          <Pressable onPress={() => router.replace('/')}>
+            <MaterialCommunityIcons 
+              name="logout" 
+              size={35}
+              color="#555"
+            />
+          </Pressable>
         </View>
 
-        {/* Parte 2: Cards de Resumo (com cores sólidas) */}
         <View style={styles.summaryContainer}>
           <View style={[styles.summaryCard, styles.summaryMedicamentos]}>
             <Text style={styles.summaryNumber}>{medicamentos.length}</Text>
@@ -83,7 +76,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 5. (ADICIONADO DE VOLTA) Barra de Busca */}
         <View style={styles.searchBarContainer}>
           <MaterialCommunityIcons name="magnify" size={24} color="#777" style={styles.searchIcon} />
           <TextInput 
@@ -92,19 +84,16 @@ export default function HomeScreen() {
             placeholderTextColor="#777"
           />
         </View>
-
       </View>
-      {/* ===== FIM DA ÁREA DO CABEÇALHO ===== */}
 
 
-      {/* ===== CONTEÚDO PRINCIPAL (FOLHA CINZA) ===== */}
       <View style={styles.mainContent}>
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Lista dinâmica de medicamentos */}
           {medicamentos.map((med) => (
             <View key={med.id} style={styles.medCard}>
-              {/* ... O conteúdo dos cards continua o mesmo ... */}
-              <View style={styles.medCardHeader}>
+              
+              <View style={styles.medCardHeader}>
                 <View style={styles.medCardInfo}>
                   <View style={styles.medIconContainer}>
                     <MaterialCommunityIcons 
@@ -114,47 +103,71 @@ export default function HomeScreen() {
                     />
                   </View>
                   <View>
-                    <Text style={styles.medName}>{med.nome}</Text>
-                    <Text style={styles.medDose}>{med.dose}</Text>
+                    <Text style={styles.medName}>{med.nome ?? ''}</Text>
+                    <Text style={styles.medDose}>{med.dose ?? ''}</Text>
                   </View>
                 </View>
                 <MaterialCommunityIcons name="dots-vertical" size={24} color="#555" />
               </View>
 
               <View style={styles.divider} />
-
               <View style={styles.horariosSection}>
                 <MaterialCommunityIcons name="clock-outline" size={24} color="#555" />
                 <Text style={styles.horariosTitle}>Horários</Text>
               </View>
-
               <View style={styles.horariosContainer}>
                 {med.horarios.map((horario, index) => (
                   <View style={styles.horarioChip} key={`${med.id}-horario-${index}`}>
                     <Text style={styles.horarioText}>{horario}</Text>
                   </View>
-                ))}
+                ))} 
               </View>
+
+
+              {med.aviso && (
+                <View style={styles.doseWarningContainer}>
+                  <MaterialCommunityIcons name="clock-alert-outline" size={20} color="#D9534F" />
+                  <Text style={styles.doseWarningText}>{med.aviso}</Text>
+                </View>
+              )}
+
+
+              <Pressable 
+                style={[
+                  styles.statusButton, 
+                  med.status === 'concluido' 
+                    ? styles.statusConcluido 
+                    : styles.statusPendente
+                ]}
+                onPress={() => console.log(`Medicamento ${med.nome} clicado!`)}
+              >
+                <MaterialCommunityIcons 
+                  name={med.status === 'concluido' ? "check-circle-outline" : "chevron-right-circle-outline"} 
+                  size={22} 
+                  color="#FFF" 
+                />
+                <Text style={styles.statusButtonText}>
+                  {med.status === 'concluido' ? 'Concluído' : 'Marcar como Tomado'}
+                </Text>
+              </Pressable>
+
             </View>
           ))}
         </ScrollView>
-  A    </View>
+      </View> 
     </SafeAreaView>
   );
 }
 
-// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // Cor de fundo clara para o topo
     backgroundColor: '#F0F7F6', 
   },
   headerContainer: {
     paddingHorizontal: 20, 
     paddingTop: 10,
     paddingBottom: 20, 
-    // Removemos o 'borderBottomRadius'
   },
   header: {
     flexDirection: 'row', 
@@ -171,12 +184,10 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    // Cor do texto escura
     color: '#333',
   },
   date: {
     fontSize: 20,
-    // Cor do texto escura
     color: '#777',
   },
   summaryContainer: {
@@ -193,17 +204,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     minHeight: 85,
     justifyContent: 'center',
-    // Removemos a borda e fundo transparente
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
-  // 6. Cores sólidas de fundo (como na sua imagem)
-  summaryMedicamentos: { backgroundColor: '#5CA498' }, // Verde-azulado
-  summaryAdministrados: { backgroundColor: '#4CAF50' }, // Verde
-  summaryAtrasados: { backgroundColor: '#E57373' }, // Vermelho
+  summaryMedicamentos: { backgroundColor: '#5CA498' },
+  summaryAdministrados: { backgroundColor: '#4CAF50' },
+  summaryAtrasados: { backgroundColor: '#E57373' },
   summaryNumber: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -215,12 +224,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-
-  // 7. (ADICIONADO DE VOLTA) Estilos da Busca
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF', // Fundo branco
+    backgroundColor: '#FFF', 
     borderRadius: 12,
     paddingHorizontal: 15,
     marginTop: 20,
@@ -239,20 +246,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-
-  // 8. Estilo do "sheet" cinza
   mainContent: {
     flex: 1, 
-    backgroundColor: '#E3E3E3', // Fundo cinza
-    // Adicionamos as bordas arredondadas de volta
+    backgroundColor: '#E3E3E3', 
     borderTopLeftRadius: 25, 
     borderTopRightRadius: 25,
     paddingHorizontal: 15, 
-    // Removemos o 'marginTop' negativo
-    paddingTop: 20, // Padding normal
+    paddingTop: 20,
   },
 
-  // ... (O restante dos estilos 'medCard' etc. continua igual)
+
   medCard: {
     backgroundColor: '#FFF',
     borderRadius: 15,
@@ -295,7 +298,7 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#EEE',
     marginVertical: 15, 
-},
+  },
   horariosSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -323,4 +326,42 @@ const styles = StyleSheet.create({
     color: '#00695C', 
     fontWeight: '600',
   },
+
+  doseWarningContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF8E1', 
+    borderColor: '#FFD54F', 
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginTop: 15, 
+  },
+  doseWarningText: {
+    color: '#D9534F', 
+    fontWeight: '600',
+    fontSize: 14,
+    marginLeft: 10,
+  },
+  statusButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 15, 
+  },
+  statusConcluido: {
+    backgroundColor: '#5CA498', 
+  },
+  statusPendente: {
+    backgroundColor: '#4285F4', 
+  },
+  statusButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
 });

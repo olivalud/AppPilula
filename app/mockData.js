@@ -1,4 +1,4 @@
-
+// Este é o nosso "banco de dados falso" por enquanto.
 export const mockMedicamentos = [
   {
     id: '1',
@@ -6,6 +6,8 @@ export const mockMedicamentos = [
     dose: '500mg - Cápsula',
     icone: 'pill',
     horarios: ['08:00', '12:00', '16:00', '20:00'],
+    aviso: 'Resta uma dose!', 
+    status: 'concluido'     
   },
   {
     id: '2',
@@ -13,6 +15,8 @@ export const mockMedicamentos = [
     dose: '750mg - Comprimido',
     icone: 'pill',
     horarios: ['09:00', '18:00'],
+    aviso: null, 
+    status: 'pendente' 
   },
   {
     id: '3',
@@ -20,11 +24,13 @@ export const mockMedicamentos = [
     dose: '1000mg - Efervescente',
     icone: 'beaker-outline',
     horarios: ['07:00'],
+    aviso: 'Acabando!',
+    status: 'pendente'
   }
 ];
 
 export const mockResumo = {
-  total: 3,
+  total: 4,
   administrados: 2,
   atrasados: 1,
 };
