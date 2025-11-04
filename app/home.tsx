@@ -419,7 +419,7 @@ export default function HomeScreen() {
                   color="#FFF"
                 />
                 <Text style={styles.statusButtonText}>
-                  {med.status === 'concluido' ? 'Concluído' : 'Marcar como Tomado'}
+                  {med.status === 'concluido' ? 'Concluído' : 'Marcar como Administrado'}
                 </Text>
               </Pressable>
 
