@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -7,13 +8,12 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View,
-  Animated,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
+import { mockMedicamentos, mockResumo } from '../src/data/mockData';
 import ButtonAddMedicamento from './components/ButtonAddMedicamento';
-import { mockMedicamentos, mockResumo } from './mockData';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -22,6 +22,9 @@ export default function HomeScreen() {
   const [resumo, setResumo] = useState(mockResumo);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'concluido' | 'atrasado'>('all');
+
+  const [history, setHistory] = useState<any[]>([]);
+  const [unreadHistoryCount, setUnreadHistoryCount] = useState(0);
 
   const params = useLocalSearchParams();
 
@@ -55,16 +58,40 @@ export default function HomeScreen() {
         }
         if (parsed && parsed.id && !processedIdsRef.current.has(parsed.id)) {
           const novo = parsed;
-          setMedicamentos((prev) => {
-            if (prev.find((p) => p.id === novo.id)) return prev;
-            const next = [novo, ...prev];
-            const administrados = next.filter((x) => x.status === 'concluido').length;
-            const atrasados = next.filter((x) => !!x.aviso && x.status !== 'concluido').length;
-            setResumo((r) => ({ ...r, administrados, atrasados, total: next.length } as any));
-            return next;
-          });
-          processedIdsRef.current.add(parsed.id);
-          try { router.replace('/home'); } catch (e) { /* ignore */ }
+          // persist first (await) to avoid race with storage load
+          (async () => {
+            try {
+              // avoid duplicate
+              if (medicamentos.find((p) => p.id === novo.id)) {
+                // still mark as processed to avoid reapplication
+                processedIdsRef.current.add(parsed.id);
+                try { router.replace('/home'); } catch (e) { }
+                return;
+              }
+              const next = [novo, ...medicamentos];
+              const administrados = next.filter((x) => x.status === 'concluido').length;
+              const atrasados = next.filter((x) => !!x.aviso && x.status !== 'concluido').length;
+              await AsyncStorage.setItem('medicamentos', JSON.stringify(next));
+              await AsyncStorage.setItem('resumo', JSON.stringify({ ...mockResumo, administrados, atrasados, total: next.length }));
+              // now update in-memory state
+              setMedicamentos(next);
+              setResumo((r) => ({ ...r, administrados, atrasados, total: next.length } as any));
+            } catch (e) {
+              console.warn('[Home] erro ao persistir novo medicamento', e);
+              // fallback: still apply in-memory
+              setMedicamentos((prev) => {
+                if (prev.find((p) => p.id === novo.id)) return prev;
+                const next = [novo, ...prev];
+                const administrados = next.filter((x) => x.status === 'concluido').length;
+                const atrasados = next.filter((x) => !!x.aviso && x.status !== 'concluido').length;
+                setResumo((r) => ({ ...r, administrados, atrasados, total: next.length } as any));
+                return next;
+              });
+            } finally {
+              processedIdsRef.current.add(parsed.id);
+              try { router.replace('/home'); } catch (e) { }
+            }
+          })();
         }
       }
 
@@ -85,15 +112,24 @@ export default function HomeScreen() {
         }
         if (parsed && parsed.id && !processedIdsRef.current.has(parsed.id)) {
           const updated = parsed;
-          setMedicamentos((prev) => {
-            const next = prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m));
-            const administrados = next.filter((x) => x.status === 'concluido').length;
-            const atrasados = next.filter((x) => !!x.aviso && x.status !== 'concluido').length;
-            setResumo((r) => ({ ...r, administrados, atrasados, total: next.length } as any));
-            return next;
-          });
-          processedIdsRef.current.add(parsed.id);
-          try { router.replace('/home'); } catch (e) { }
+          (async () => {
+            try {
+              const next = medicamentos.map((m) => (m.id === updated.id ? { ...m, ...updated } : m));
+              const administrados = next.filter((x) => x.status === 'concluido').length;
+              const atrasados = next.filter((x) => !!x.aviso && x.status !== 'concluido').length;
+              await AsyncStorage.setItem('medicamentos', JSON.stringify(next));
+              await AsyncStorage.setItem('resumo', JSON.stringify({ ...mockResumo, administrados, atrasados, total: next.length }));
+              setMedicamentos(next);
+              setResumo((r) => ({ ...r, administrados, atrasados, total: next.length } as any));
+            } catch (e) {
+              console.warn('[Home] erro ao persistir medicamento atualizado', e);
+              // fallback: still apply in-memory
+              setMedicamentos((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
+            } finally {
+              processedIdsRef.current.add(parsed.id);
+              try { router.replace('/home'); } catch (e) { }
+            }
+          })();
         }
       }
     } catch (e) {
@@ -139,6 +175,9 @@ export default function HomeScreen() {
   }, [medicamentos, query, statusFilter]);
 
   const toggleMedicamentoStatus = (id: string) => {
+    const medBefore = medicamentos.find((m) => m.id === id) ?? null;
+    const willConclude = medBefore && medBefore.status !== 'concluido';
+
     setMedicamentos((prev) => {
       const next = prev.map((m) => {
         if (m.id === id) {
@@ -156,6 +195,11 @@ export default function HomeScreen() {
 
       return next;
     });
+
+    // add to history if we just marked as concluido
+    if (willConclude && medBefore) {
+      addHistoryEntry(medBefore);
+    }
   };
 
   const deleteMedicamento = (id: string) => {
@@ -212,12 +256,20 @@ export default function HomeScreen() {
       try {
         const medsJson = await AsyncStorage.getItem('medicamentos');
         const resumoJson = await AsyncStorage.getItem('resumo');
+        const historyJson = await AsyncStorage.getItem('history');
+        const unread = await AsyncStorage.getItem('historyUnread');
         if (!mounted) return;
         if (medsJson) {
           try { setMedicamentos(JSON.parse(medsJson)); } catch (e) { /* ignore */ }
         }
         if (resumoJson) {
           try { setResumo(JSON.parse(resumoJson)); } catch (e) { /* ignore */ }
+        }
+        if (historyJson) {
+          try { setHistory(JSON.parse(historyJson)); } catch (e) { /* ignore */ }
+        }
+        if (unread) {
+          try { setUnreadHistoryCount(Number(unread) || 0); } catch (e) { /* ignore */ }
         }
       } catch (e) {
         console.warn('Falha ao carregar storage', e);
@@ -233,12 +285,103 @@ export default function HomeScreen() {
       try {
         await AsyncStorage.setItem('medicamentos', JSON.stringify(medicamentos));
         await AsyncStorage.setItem('resumo', JSON.stringify(resumo));
+        await AsyncStorage.setItem('history', JSON.stringify(history));
       } catch (e) {
         console.warn('Falha ao salvar storage', e);
       }
     };
     save();
   }, [medicamentos, resumo]);
+
+  // save history when it changes
+  useEffect(() => {
+    const saveHistory = async () => {
+      try { await AsyncStorage.setItem('history', JSON.stringify(history)); } catch (e) { /* ignore */ }
+    };
+    saveHistory();
+  }, [history]);
+
+  // Recompute avisos automaticamente based on horarios and current time.
+  // Preserva avisos já existentes (ex: 'Acabando!') e só atualiza quando necessário.
+  useEffect(() => {
+    let mounted = true;
+    const computeAvisos = async () => {
+      try {
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        let changed = false;
+        const next = medicamentos.map((m) => {
+          const existing = m.aviso ?? '';
+          let novoAviso = existing;
+          if (m.status === 'concluido') {
+            // concluídos não devem mostrar aviso
+            novoAviso = '';
+          } else {
+            // se já existe um aviso textual (ex: 'Acabando!'), preservamos
+            if (!existing || !String(existing).trim()) {
+              const horarios = Array.isArray(m.horarios) ? m.horarios : [];
+              const minutes = horarios
+                .map((h: string) => {
+                  const parts = h.split(':').map((p) => Number(p));
+                  if (parts.length < 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return NaN;
+                  return parts[0] * 60 + parts[1];
+                })
+                .filter((x: any) => !Number.isNaN(x))
+                .sort((a: number, b: number) => a - b);
+              if (minutes.length > 0) {
+                const past = minutes.filter((t: number) => t <= currentMinutes).length;
+                const future = minutes.length - past;
+                if (past > 0) novoAviso = 'Atrasado';
+                else if (future === 1) novoAviso = 'Uma dose restante';
+                else novoAviso = '';
+              } else {
+                novoAviso = '';
+              }
+            } else {
+              novoAviso = String(existing);
+            }
+          }
+          if (String(novoAviso || '') !== String(existing || '')) changed = true;
+          return { ...m, aviso: novoAviso };
+        });
+
+        if (!mounted) return;
+        if (changed) {
+          setMedicamentos(next);
+          const administrados = next.filter((x) => x.status === 'concluido').length;
+          const atrasados = next.filter((x) => !!x.aviso && x.status !== 'concluido').length;
+          setResumo((r) => ({ ...r, administrados, atrasados, total: next.length } as any));
+          try {
+            await AsyncStorage.setItem('medicamentos', JSON.stringify(next));
+            await AsyncStorage.setItem('resumo', JSON.stringify({ ...mockResumo, administrados, atrasados, total: next.length }));
+          } catch (e) {
+            console.warn('[Home] falha ao salvar avisos', e);
+          }
+        }
+      } catch (e) {
+        console.warn('[Home] erro ao computar avisos', e);
+      }
+    };
+
+    // compute immediately, and every minute to reflect time changes
+    computeAvisos();
+    const id = setInterval(computeAvisos, 60 * 1000);
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
+  }, [medicamentos, history]);
+
+  const addHistoryEntry = (med: any) => {
+    const entry = { id: String(Date.now()), medId: med.id, nome: med.nome, timestamp: new Date().toISOString() };
+    setHistory((prev) => [entry, ...prev]);
+    // increment unread badge
+    setUnreadHistoryCount((n) => {
+      const next = n + 1;
+      try { AsyncStorage.setItem('historyUnread', String(next)); } catch (e) { /* ignore */ }
+      return next;
+    });
+  };
   // contextual menu state (positioned near the three-dot button)
   const [menuVisible, setMenuVisible] = React.useState(false);
   const [menuX, setMenuX] = React.useState(0);
@@ -307,13 +450,28 @@ export default function HomeScreen() {
               <Text style={styles.date}>{dataAtual}</Text>
             </View>
           </View>
-          <Pressable onPress={() => router.replace('/')}>
-            <MaterialCommunityIcons
-              name="logout"
-              size={35}
-              color="#696868ff"
-            />
-          </Pressable>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ marginRight: 12 }}>
+              <Pressable onPress={async () => { try { await AsyncStorage.setItem('historyUnread', '0'); } catch (e) { } setUnreadHistoryCount(0); router.push('/historico' as any); }}>
+                <Svg width={32} height={32} viewBox="0 0 24 24" fill="none" accessibilityRole="image" accessibilityLabel="Sino de notificações">
+                  <Path d="M10.268 21a2 2 0 0 0 3.464 0" stroke="#696868ff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                  <Path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" stroke="#696868ff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                </Svg>
+              </Pressable>
+              {unreadHistoryCount > 0 && (
+                <View style={styles.badgeContainer}>
+                  <Text style={styles.badgeText}>{unreadHistoryCount}</Text>
+                </View>
+              )}
+            </View>
+            <Pressable onPress={() => router.replace('/')}>
+              <MaterialCommunityIcons
+                name="logout"
+                size={35}
+                color="#696868ff"
+              />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.summaryContainer}>
@@ -686,4 +844,6 @@ const styles = StyleSheet.create({
   snackbarText: { color: '#fff', flex: 1, marginRight: 12 },
   snackbarAction: { paddingHorizontal: 10, paddingVertical: 6 },
   snackbarActionText: { color: '#FFD54F', fontWeight: '700' },
+  badgeContainer: { position: 'absolute', top: -6, right: -6, minWidth: 20, height: 20, borderRadius: 10, backgroundColor: '#D9534F', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, elevation: 6 },
+  badgeText: { color: '#fff', fontWeight: '700', fontSize: 12 },
 });
