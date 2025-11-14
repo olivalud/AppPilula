@@ -1,10 +1,10 @@
 import { useRouter } from "expo-router";
 import * as React from "react";
-import {Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Platform} from "react-native";
+import { Image, ImageBackground, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BackgroundLogin from "../src/assets/background-login.png";
 import Logo from "../src/assets/logo.png";
-import { MaskedTextInput } from "react-native-mask-text";
+// MaskedTextInput removed; using built-in TextInput with custom CPF formatting.
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const iconSize = Platform.OS === 'web' ? 22 : 30;
@@ -12,8 +12,22 @@ const iconSize = Platform.OS === 'web' ? 22 : 30;
 const InterfaceDeLoginImage = () => {
   const router = useRouter();
 
-const [password, setPassword] = React.useState('');
+  const [cpf, setCpf] = React.useState('');
+  const [password, setPassword] = React.useState('');
   const [isPasswordVisible, setPasswordVisible] = React.useState(false);
+
+  const formatCPF = (digits: string) => {
+    const d = digits.replace(/\D/g, '').slice(0, 11);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+    if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9, 11)}`;
+  };
+
+  const handleCpfChange = (text: string) => {
+    const digits = text.replace(/\D/g, '').slice(0, 11);
+    setCpf(formatCPF(digits));
+  };
 
   return (
     <View style={styles.interfaceDeLoginImage}>
@@ -21,29 +35,35 @@ const [password, setPassword] = React.useState('');
         <SafeAreaView style={styles.view}>
           <ScrollView contentContainerStyle={styles.scrollContent} bounces={false} showsHorizontalScrollIndicator={false}>
             <View style={styles.headerContainer}>
-              <Image source={Logo} style={styles.logo1Icon} resizeMode="contain"/>
+              <Image source={Logo} style={styles.logo1Icon} resizeMode="contain" />
               <Text style={styles.plula}>Pílula+</Text>
             </View>
-            <MaskedTextInput style={styles.input} placeholder="CPF" keyboardType="numeric" mask="999.999.999-99" onChangeText={(text, rawText) => { console.log(text); console.log(rawText); }}/>
+            <TextInput
+              style={styles.input}
+              placeholder="CPF"
+              keyboardType="numeric"
+              value={cpf}
+              onChangeText={handleCpfChange}
+            />
             <View style={styles.passwordContainer}>
               <TextInput style={styles.inputField} placeholder="Senha" value={password} onChangeText={setPassword}
-                secureTextEntry={!isPasswordVisible}/>
+                secureTextEntry={!isPasswordVisible} />
               <Pressable onPress={() => setPasswordVisible(!isPasswordVisible)} style={styles.eyeIcon}>
-                <MaterialCommunityIcons name={isPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)"/>
+                <MaterialCommunityIcons name={isPasswordVisible ? 'eye' : 'eye-off'} size={30} color="rgba(0, 0, 0, 0.7)" />
               </Pressable>
             </View>
-            <Pressable style={styles.forgotPasswordButton} onPress={() => {router.push("/redefinirSenha");}}>
+            <Pressable style={styles.forgotPasswordButton} onPress={() => { router.push("/redefinirSenha"); }}>
               <Text style={styles.esqueceuASenha}>Esqueceu a senha?</Text>
             </Pressable>
-            <Pressable style={styles.buttonLogin} onPress={() => {router.push("/home");}}>
+            <Pressable style={styles.buttonLogin} onPress={() => { router.push("/home"); }}>
               <Text style={styles.entrar}>Entrar</Text>
             </Pressable>
-            <Pressable style={styles.registerButton} onPress={() => {router.push("/cadastro");}}>
+            <Pressable style={styles.registerButton} onPress={() => { router.push("/cadastro"); }}>
               <Text style={styles.cadastreSe}>Cadastre-se</Text>
             </Pressable>
             <Text style={styles.v100}>v1.0.0</Text>
           </ScrollView>
-          
+
         </SafeAreaView>
       </ImageBackground>
     </View>
@@ -57,13 +77,13 @@ const styles = StyleSheet.create({
   view: {
     flex: 1,
     ...Platform.select({
-    web: {
-      justifyContent: 'center'
-    }
-  })
+      web: {
+        justifyContent: 'center'
+      }
+    })
   },
   backgroundIcon: {
-    width: "100%", 
+    width: "100%",
     height: "100%",
     position: 'absolute',
   },
@@ -76,7 +96,7 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: {
         maxWidth: 500,
-        width: '100%', 
+        width: '100%',
         marginHorizontal: 'auto',
         paddingBottom: 50,
       }
@@ -126,8 +146,8 @@ const styles = StyleSheet.create({
     })
   },
   passwordContainer: {
-    flexDirection: 'row',       
-    alignItems: 'center',     
+    flexDirection: 'row',
+    alignItems: 'center',
     width: '90%',
     height: 60,
     borderBottomWidth: 2,
@@ -141,7 +161,7 @@ const styles = StyleSheet.create({
     })
   },
   inputField: {
-    flex: 1,               
+    flex: 1,
     height: '100%',
     fontSize: 26,
     paddingHorizontal: 10,
@@ -152,7 +172,7 @@ const styles = StyleSheet.create({
     })
   },
   eyeIcon: {
-    padding: 10, 
+    padding: 10,
     ...Platform.select({
       web: {
         padding: 8, // Área de clique um pouco menor
