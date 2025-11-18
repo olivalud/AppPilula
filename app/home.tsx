@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -58,27 +59,29 @@ export default function HomeScreen() {
         }
         if (parsed && parsed.id && !processedIdsRef.current.has(parsed.id)) {
           const novo = parsed;
-          // persist first (await) to avoid race with storage load
+          // Persistir (evita race com storage)
           (async () => {
             try {
-              // avoid duplicate
-              if (medicamentos.find((p) => p.id === novo.id)) {
-                // still mark as processed to avoid reapplication
+              // Ler storage atual
+              const storedJson = await AsyncStorage.getItem('medicamentos');
+              const currentList = storedJson ? JSON.parse(storedJson) : medicamentos;
+              // Evitar duplicado
+              if (currentList.find((p: any) => p.id === novo.id)) {
                 processedIdsRef.current.add(parsed.id);
                 try { router.replace('/home'); } catch (e) { }
                 return;
               }
-              const next = [novo, ...medicamentos];
+              const next = [novo, ...currentList];
               const administrados = next.filter((x) => x.status === 'concluido').length;
               const atrasados = next.filter((x) => !!x.aviso && x.status !== 'concluido').length;
               await AsyncStorage.setItem('medicamentos', JSON.stringify(next));
               await AsyncStorage.setItem('resumo', JSON.stringify({ ...mockResumo, administrados, atrasados, total: next.length }));
-              // now update in-memory state
+              // Atualizar estado em memória
               setMedicamentos(next);
               setResumo((r) => ({ ...r, administrados, atrasados, total: next.length } as any));
             } catch (e) {
               console.warn('[Home] erro ao persistir novo medicamento', e);
-              // fallback: still apply in-memory
+              // Fallback: aplicar em memória (update funcional)
               setMedicamentos((prev) => {
                 if (prev.find((p) => p.id === novo.id)) return prev;
                 const next = [novo, ...prev];
@@ -114,16 +117,25 @@ export default function HomeScreen() {
           const updated = parsed;
           (async () => {
             try {
-              const next = medicamentos.map((m) => (m.id === updated.id ? { ...m, ...updated } : m));
-              const administrados = next.filter((x) => x.status === 'concluido').length;
-              const atrasados = next.filter((x) => !!x.aviso && x.status !== 'concluido').length;
+              // Ler storage atual
+              const storedJson = await AsyncStorage.getItem('medicamentos');
+              const currentList = storedJson ? JSON.parse(storedJson) : medicamentos;
+              console.log('[Home] applying updatedMed id=', updated.id, 'medicamentosCount=', currentList.length, 'hasId=', currentList.some((m: any) => m.id === updated.id));
+              let next = currentList.map((m: any) => (m.id === updated.id ? { ...m, ...updated } : m));
+              // Se id não existir, inserir no topo
+              if (!next.some((m: any) => m.id === updated.id)) {
+                next = [updated, ...currentList];
+                console.log('[Home] updatedMed id not found in existing list — inserting at top');
+              }
+              const administrados = next.filter((x: any) => x.status === 'concluido').length;
+              const atrasados = next.filter((x: any) => !!x.aviso && x.status !== 'concluido').length;
               await AsyncStorage.setItem('medicamentos', JSON.stringify(next));
               await AsyncStorage.setItem('resumo', JSON.stringify({ ...mockResumo, administrados, atrasados, total: next.length }));
               setMedicamentos(next);
               setResumo((r) => ({ ...r, administrados, atrasados, total: next.length } as any));
             } catch (e) {
               console.warn('[Home] erro ao persistir medicamento atualizado', e);
-              // fallback: still apply in-memory
+              // Fallback: aplicar em memória
               setMedicamentos((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
             } finally {
               processedIdsRef.current.add(parsed.id);
@@ -150,7 +162,7 @@ export default function HomeScreen() {
     // Filtro Status
     let list = medicamentos.filter((m) => {
       if (statusFilter === 'concluido') return m.status === 'concluido';
-      // 'atrasado' should only include items with aviso AND that are not concluded
+      // 'atrasado' apenas c/ aviso e não concluído
       if (statusFilter === 'atrasado') return !!m.aviso && m.status !== 'concluido';
       return true;
     });
@@ -163,7 +175,7 @@ export default function HomeScreen() {
       });
     }
 
-    // Sort
+    // Ordenar prioridade
     const priority = (m: any) => {
       if (m.status === 'concluido') return 2;
       if (m.aviso) return 0;
@@ -182,7 +194,7 @@ export default function HomeScreen() {
       const next = prev.map((m) => {
         if (m.id === id) {
           const newStatus = m.status === 'concluido' ? 'pendente' : 'concluido';
-          // if we mark as concluido, clear the aviso so it won't be considered 'atrasado'
+          // limpar aviso ao concluir
           return { ...m, status: newStatus, aviso: newStatus === 'concluido' ? '' : m.aviso };
         }
         return m;
@@ -196,7 +208,7 @@ export default function HomeScreen() {
       return next;
     });
 
-    // add to history if we just marked as concluido
+    // adicionar ao histórico ao concluir
     if (willConclude && medBefore) {
       addHistoryEntry(medBefore);
     }
@@ -212,7 +224,7 @@ export default function HomeScreen() {
     });
   };
 
-  // Perform optimistic delete with snackbar undo
+  // Excluir otimista + Desfazer
   const performDeleteWithUndo = (id: string) => {
     const med = medicamentos.find((m) => m.id === id) ?? null;
     if (!med) return;
@@ -249,7 +261,7 @@ export default function HomeScreen() {
     setSnackbarVisible(false);
   };
 
-  // Persistence: load stored medicamentos/resumo on mount
+  // Ler storage ao montar
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -279,7 +291,7 @@ export default function HomeScreen() {
     return () => { mounted = false; };
   }, []);
 
-  // Save whenever medicamentos or resumo change
+  // Salvar ao mudar meds/resumo
   useEffect(() => {
     const save = async () => {
       try {
@@ -293,7 +305,7 @@ export default function HomeScreen() {
     save();
   }, [medicamentos, resumo]);
 
-  // save history when it changes
+  // Salvar histórico ao mudar
   useEffect(() => {
     const saveHistory = async () => {
       try { await AsyncStorage.setItem('history', JSON.stringify(history)); } catch (e) { /* ignore */ }
@@ -301,8 +313,7 @@ export default function HomeScreen() {
     saveHistory();
   }, [history]);
 
-  // Recompute avisos automaticamente based on horarios and current time.
-  // Preserva avisos já existentes (ex: 'Acabando!') e só atualiza quando necessário.
+  // Recalcular avisos (hora) — preservar avisos manuais
   useEffect(() => {
     let mounted = true;
     const computeAvisos = async () => {
@@ -402,6 +413,7 @@ export default function HomeScreen() {
 
   const handleEditFromMenu = (med: any) => {
     try {
+      console.log('[Home] Edit requested for med id:', med?.id);
       const q = encodeURIComponent(JSON.stringify(med));
       router.push(`/adicionarMedicamento?editMed=${q}` as any);
     } catch (e) {
@@ -411,9 +423,14 @@ export default function HomeScreen() {
   };
 
   const handleDeleteFromMenu = (med: any) => {
-    // perform optimistic delete with undo via snackbar
-    performDeleteWithUndo(med.id);
-    closeMenu();
+    confirmDelete(med);
+  };
+
+  const confirmDelete = (med: any) => {
+    Alert.alert('Confirmar exclusão', `Deseja excluir "${med.nome}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Excluir', style: 'destructive', onPress: () => { performDeleteWithUndo(med.id); closeMenu(); } },
+    ]);
   };
 
   const capitalizarPrimeiraLetra = (str: string) => {
@@ -593,18 +610,20 @@ export default function HomeScreen() {
 
       {/* contextual menu (edit / delete) */}
       {menuVisible && menuMed && (
-        <Pressable style={styles.menuOverlay} onPress={closeMenu}>
+        <View style={styles.menuOverlay} pointerEvents="box-none">
+          {/* backdrop: captures taps outside menu to close */}
+          <Pressable style={styles.menuBackdrop} onPress={closeMenu} />
           <View style={[styles.menuBox, { top: menuY - 60, left: Math.max(8, menuX - 120) }]}>
-            <Pressable style={styles.menuItem} onPress={() => handleEditFromMenu(menuMed)}>
+            <Pressable style={styles.menuItem} onPress={() => { handleEditFromMenu(menuMed); }}>
               <MaterialCommunityIcons name="pencil" size={18} color="#2E7D32" />
               <Text style={styles.menuText}>Editar</Text>
             </Pressable>
-            <Pressable style={styles.menuItem} onPress={() => handleDeleteFromMenu(menuMed)}>
+            <Pressable style={styles.menuItem} onPress={() => { confirmDelete(menuMed); }}>
               <MaterialCommunityIcons name="delete-outline" size={18} color="#D32F2F" />
               <Text style={[styles.menuText, { color: '#D32F2F' }]}>Excluir</Text>
             </Pressable>
           </View>
-        </Pressable>
+        </View>
       )}
 
       {/* Snackbar de ação (Desfazer) */}
@@ -837,6 +856,7 @@ const styles = StyleSheet.create({
     zIndex: 30,
   },
   menuOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  menuBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   menuBox: { position: 'absolute', width: 200, backgroundColor: '#fff', borderRadius: 8, paddingVertical: 6, elevation: 6, shadowColor: 'rgba(0,0,0,0.18)', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 6 },
   menuItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10 },
   menuText: { marginLeft: 10, fontSize: 16, color: '#222' },
