@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import api from "../services/api"
 
 export default function HistoricoScreen() {
   const router = useRouter();
@@ -11,13 +12,17 @@ export default function HistoricoScreen() {
   const [medicamentos, setMedicamentos] = useState<any[]>([]);
 
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      try {
-        const h = await AsyncStorage.getItem('history');
+      let mounted = true;
+      const load = async () => {
+          try {
+              const token = await AsyncStorage.getItem('token');
+              if (!token) router.push("/"); 
+              const r = await api.get('/notificacao?inicio=00:00:00&fim=23:59:59', {
+                  headers: { Authorization: `Bearer ${token}` }
+              });
         const m = await AsyncStorage.getItem('medicamentos');
         if (!mounted) return;
-        if (h) setHistory(JSON.parse(h));
+        setHistory(r.data);
         if (m) setMedicamentos(JSON.parse(m));
       } catch (e) {
         // ignore
