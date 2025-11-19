@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import ButtonAddMedicamento from './components/ButtonAddMedicamento';
 import api from '../services/api'; // ajusta caminho se necessário
+import { getUsuarioLogado } from '@/services/user';
 
 // Tipagem baseada no retorno que você mostrou
 type BackendMedicamento = {
@@ -77,6 +78,30 @@ export default function HomeScreen() {
             observacoes: b.observacoes ?? '',
             raw: b,
         };
+    };
+
+    const normalizeMed = (m: any): UIManagableMed | null => {
+        if (!m) return null;
+        try {
+            const id = String(m.id ?? m.raw?.id ?? Date.now());
+            const nome = m.nome ?? m.raw?.nome ?? '';
+            const horarios = Array.isArray(m.horarios) ? m.horarios : (Array.isArray(m.raw?.horarios) ? m.raw.horasPrevistas.map((h: string) => h.slice(0, 5)) : []);
+            const status = (m.status ?? 'pendente') as UIManagableMed['status'];
+            return {
+                id,
+                nome,
+                dose: m.dose ?? m.raw?.dosagem ?? '',
+                icone: m.icone ?? 'pill',
+                horarios,
+                status,
+                aviso: m.aviso ?? '',
+                observacoes: m.observacoes ?? m.raw?.observacoes ?? '',
+                raw: m.raw ?? (m.raw ? m.raw : undefined),
+            };
+        } catch (e) {
+            console.warn('[normalizeMed] falha normalizando med', e, m);
+            return null;
+        }
     };
 
     const loadMedicamentosFromApi = async () => {
@@ -170,12 +195,24 @@ export default function HomeScreen() {
             .toLowerCase();
 
     const recalcAndPersist = async (next: UIManagableMed[]) => {
-        const administrados = next.filter((x) => x.status === 'concluido').length;
-        const atrasados = next.filter((x) => !!x.aviso && x.status !== 'concluido').length;
-        const nextResumo = { total: next.length, administrados, atrasados };
+        const safe = (next ?? []).filter((x) => x != null);
+
+        const administrados = safe.filter((x) => x.status === 'concluido').length;
+
+        const atrasados = safe.filter(
+            (x) => !!x.aviso && x.status !== 'concluido'
+        ).length;
+
+        const nextResumo = {
+            total: safe.length,
+            administrados,
+            atrasados,
+        };
+
         setResumo(nextResumo);
+
         try {
-            await AsyncStorage.setItem('medicamentos', JSON.stringify(next));
+            await AsyncStorage.setItem('medicamentos', JSON.stringify(safe));
             await AsyncStorage.setItem('resumo', JSON.stringify(nextResumo));
         } catch (e) {
             console.warn('[Home] falha ao persistir recalc', e);
@@ -245,24 +282,33 @@ export default function HomeScreen() {
         const q = query.trim();
         const qNorm = normalize(q);
 
-        let list = medicamentos.filter((m) => {
+        let list = (medicamentos ?? []).filter((m) => m != null);
+
+        list = list.filter((m) => {
+            if (!m) return false;
             if (statusFilter === 'concluido') return m.status === 'concluido';
             if (statusFilter === 'atrasado') return !!m.aviso && m.status !== 'concluido';
             return true;
         });
 
-        if (qNorm) {
-            list = list.filter((m) => normalize(m.nome ?? '').includes(qNorm));
+        list = list
+            .map((m) => normalizeMed(m))
+            .filter((m) => m != null) as UIManagableMed[];
+
+        if (qNorm !== '') {
+            list = list.filter((m) => {
+                const nome = normalize(m.nome ?? '');
+                const dose = normalize(m.dose ?? '');
+                return nome.includes(qNorm) || dose.includes(qNorm);
+            });
         }
 
-        const priority = (m: any) => {
+        const priority = (m: UIManagableMed) => {
             if (m.status === 'concluido') return 2;
             if (m.aviso) return 0;
             return 1;
         };
-
-        list = [...list].sort((a, b) => priority(a) - priority(b));
-        return list;
+        return [...list].sort((a, b) => priority(a) - priority(b));
     }, [medicamentos, query, statusFilter]);
 
     const toggleMedicamentoStatus = async (id: string) => {
@@ -473,6 +519,19 @@ export default function HomeScreen() {
     const mes = capitalizarPrimeiraLetra(partesMes[1] ?? '');
     const dataAtual = `${diaSemana}, ${dia} de ${mes}`;
 
+    const [usuarioNome, setUsuarioNome] = useState("");
+
+    useEffect(() => {
+        async function carregarUsuario() {
+            try {
+                const usuario = await getUsuarioLogado();
+                setUsuarioNome(usuario.nome)
+            } catch (error) {
+                console.log("erro ao carregar usuário", error);
+            }
+        }
+        carregarUsuario();
+    }, []);
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
 
@@ -485,7 +544,7 @@ export default function HomeScreen() {
                             color="#5CA498"
                         />
                         <View style={styles.headerInfo}>
-                            <Text style={styles.userName}>Usuário</Text>
+                            <Text style={styles.userName}>{usuarioNome || "Carregando"}</Text>
                             <Text style={styles.date}>{dataAtual}</Text>
                         </View>
                     </View>
@@ -558,75 +617,77 @@ export default function HomeScreen() {
                         </View>
                     )}
 
-                    {displayedMedicamentos.map((med: any) => (
-                        <View key={med.id} style={styles.medCard}>
+                    {displayedMedicamentos
+                        .filter((m) => m && typeof m === "object")
+                        .map((med) => (
+                            <View key={med.id} style={styles.medCard}>
 
-                            <View style={styles.medCardHeader}>
-                                <View style={styles.medCardInfo}>
-                                    <View style={styles.medIconContainer}>
-                                        <MaterialCommunityIcons
-                                            name={med.icone as any}
-                                            size={26}
-                                            color={med.icone === 'pill' ? '#5CA498' : '#6a5acd'}
-                                        />
+                                <View style={styles.medCardHeader}>
+                                    <View style={styles.medCardInfo}>
+                                        <View style={styles.medIconContainer}>
+                                            <MaterialCommunityIcons
+                                                name={(med?.icone ?? 'pill') as any}
+                                                size={26}
+                                                color={med.icone === 'pill' ? '#5CA498' : '#6a5acd'}
+                                            />
+                                        </View>
+                                        <View>
+                                            <Text style={styles.medName}>{med.nome ?? ''}</Text>
+                                            <Text style={styles.medDose}>{med.dose ?? ''}</Text>
+                                        </View>
                                     </View>
-                                    <View>
-                                        <Text style={styles.medName}>{med.nome ?? ''}</Text>
-                                        <Text style={styles.medDose}>{med.dose ?? ''}</Text>
-                                    </View>
+                                    <Pressable
+                                        onPressIn={(e) => {
+                                            const { pageX, pageY } = e.nativeEvent;
+                                            openMenu(med, pageX, pageY);
+                                        }}
+                                        style={{ padding: 6 }}
+                                    >
+                                        <MaterialCommunityIcons name="dots-vertical" size={24} color="#555" />
+                                    </Pressable>
                                 </View>
+
+                                <View style={styles.divider} />
+                                <View style={styles.horariosSection}>
+                                    <MaterialCommunityIcons name="clock-outline" size={24} color="#555" />
+                                    <Text style={styles.horariosTitle}>Horários</Text>
+                                </View>
+                                <View style={styles.horariosContainer}>
+                                    {med.horarios.map((horario: any, index: number) => (
+                                        <View style={styles.horarioChip} key={`${med.id}-horario-${index}`}>
+                                            <Text style={styles.horarioText}>{horario}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+
+
+                                {med.aviso && (
+                                    <View style={styles.doseWarningContainer}>
+                                        <MaterialCommunityIcons name="clock-alert-outline" size={20} color="#D9534F" />
+                                        <Text style={styles.doseWarningText}>{med.aviso}</Text>
+                                    </View>
+                                )}
+
+
                                 <Pressable
-                                    onPressIn={(e) => {
-                                        const { pageX, pageY } = e.nativeEvent;
-                                        openMenu(med, pageX, pageY);
-                                    }}
-                                    style={{ padding: 6 }}
+                                    style={[
+                                        styles.statusButton,
+                                        med.status === 'concluido' ? styles.statusConcluido : styles.statusPendente,
+                                    ]}
+                                    onPress={() => toggleMedicamentoStatus(med.id)}
                                 >
-                                    <MaterialCommunityIcons name="dots-vertical" size={24} color="#555" />
+                                    <MaterialCommunityIcons
+                                        name={med.status === 'concluido' ? "check-circle-outline" : "chevron-right-circle-outline"}
+                                        size={22}
+                                        color="#FFF"
+                                    />
+                                    <Text style={styles.statusButtonText}>
+                                        {med.status === 'concluido' ? 'Concluído' : 'Marcar como Concluído'}
+                                    </Text>
                                 </Pressable>
+
                             </View>
-
-                            <View style={styles.divider} />
-                            <View style={styles.horariosSection}>
-                                <MaterialCommunityIcons name="clock-outline" size={24} color="#555" />
-                                <Text style={styles.horariosTitle}>Horários</Text>
-                            </View>
-                            <View style={styles.horariosContainer}>
-                                {med.horarios.map((horario: any, index: number) => (
-                                    <View style={styles.horarioChip} key={`${med.id}-horario-${index}`}>
-                                        <Text style={styles.horarioText}>{horario}</Text>
-                                    </View>
-                                ))}
-                            </View>
-
-
-                            {med.aviso && (
-                                <View style={styles.doseWarningContainer}>
-                                    <MaterialCommunityIcons name="clock-alert-outline" size={20} color="#D9534F" />
-                                    <Text style={styles.doseWarningText}>{med.aviso}</Text>
-                                </View>
-                            )}
-
-
-                            <Pressable
-                                style={[
-                                    styles.statusButton,
-                                    med.status === 'concluido' ? styles.statusConcluido : styles.statusPendente,
-                                ]}
-                                onPress={() => toggleMedicamentoStatus(med.id)}
-                            >
-                                <MaterialCommunityIcons
-                                    name={med.status === 'concluido' ? "check-circle-outline" : "chevron-right-circle-outline"}
-                                    size={22}
-                                    color="#FFF"
-                                />
-                                <Text style={styles.statusButtonText}>
-                                    {med.status === 'concluido' ? 'Concluído' : 'Marcar como Concluído'}
-                                </Text>
-                            </Pressable>
-
-                        </View>
-                    ))}
+                        ))}
                 </ScrollView>
             </View>
 
