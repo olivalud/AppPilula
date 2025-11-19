@@ -6,7 +6,7 @@ const getHostIp = () => {
         const host = scriptURL.split("://")[1].split(":")[0];
         return host;
     }
-    return "192.168.0.21"
+    return "192.168.1.6"
 };
 
 export const API_URL = `http://${getHostIp()}:8080`;
