@@ -17,26 +17,44 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+type FormaAdministracao = 'Comprimido' | 'Gotas' | 'Injeção' | 'Xarope' | 'Cápsula';
+
+const administracaoMap: Record<FormaAdministracao, string> = {
+    Comprimido: "COMPRIMIDO",
+    Gotas: "GOTAS",
+    Injeção: "INJECAO",
+    Xarope: "XAROPE",
+    Cápsula: "CAPSULA"
+};
+
 export default function AdicionarMedicamentoScreen() {
     const router = useRouter();
     const params = useLocalSearchParams();
 
     const [editingId, setEditingId] = React.useState<string | null>(null);
 
-    // campos do formulário (mantive e adicionei campos do protótipo)
+    const formasAdministracao: FormaAdministracao[] = [
+        'Comprimido',
+        'Gotas',
+        'Injeção',
+        'Xarope',
+        'Cápsula'
+    ];
+
     const [nome, setNome] = React.useState('');
     const [dose, setDose] = React.useState('');
-    const [forma, setForma] = React.useState('Comprimido');
+    const [forma, setForma] = React.useState<FormaAdministracao>('Comprimido');
     const [icone, setIcone] = React.useState('pill');
     const [frequencia, setFrequencia] = React.useState(1);
-    // agora armazenamos horários como array e usamos um date/time picker
+
     const [horarios, setHorarios] = React.useState<string[]>(['08:00']);
     const [horarioTemp, setHorarioTemp] = React.useState(new Date());
     const [showTimePicker, setShowTimePicker] = React.useState(false);
+
     const [duracao, setDuracao] = React.useState('7 dias');
     const [observacoes, setObservacoes] = React.useState('');
     const [lembrete, setLembrete] = React.useState(true);
-    // datas (inicial e final)
+
     const [startDate, setStartDate] = React.useState<Date | null>(new Date());
     const [endDate, setEndDate] = React.useState<Date | null>(null);
     const [showStartDatePicker, setShowStartDatePicker] = React.useState(false);
@@ -46,19 +64,14 @@ export default function AdicionarMedicamentoScreen() {
     const incrementar = () => setFrequencia((q) => Math.min(10, q + 1));
     const decrementar = () => setFrequencia((q) => Math.max(1, q - 1));
 
-    const parseHorarios = (text: string) =>
-        text
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean);
-
     const removeHorario = (h: string) => setHorarios((prev) => prev.filter((p) => p !== h));
+
     const missingFields = React.useMemo(() => {
         const missing: string[] = [];
         if (!nome.trim()) missing.push('Nome do Medicamento');
         if (!dose.trim()) missing.push('Dosagem');
         if (!startDate) missing.push('Data inicial');
-        // Duração pode ser satisfeita por: semDataFinal (Todos os dias) OR endDate OR duracao textual
+
         if (!semDataFinal && !endDate && (!duracao || !duracao.toString().trim())) {
             missing.push('Data final / Duração (ou marque Todos os dias)');
         }
@@ -73,66 +86,62 @@ export default function AdicionarMedicamentoScreen() {
             return;
         }
 
-        const formaMap: Record<string, string> = {
-            "Comprimido": "COMPRIMIDO",
-            "Gotas": "GOTAS",
-            "Injeção": "INJECAO",
-            "Injecao": "INJECAO",
-            "Xarope": "XAROPE",
-            "Cápsula": "CAPSULA",
-            "Capsula": "CAPSULA",
-        };
-
         try {
-            const payload: any = {
-                id: editingId ? Number(editingId) : null,
-                cpfUsuario: "",
+            const horasPrevistas = horarios.map(h => {
+                return h.length === 5 ? `${h}:00` : h;
+            });
+
+            const payload = {
+                usuario: { id: 1 },
                 nome: nome.trim(),
                 dosagem: dose.trim(),
-                administracao: formaMap[forma] ?? forma.toUpperCase(),
-                frequencia: String(frequencia),
-                inicio: startDate ? startDate.toISOString() : null,
-                termino: semDataFinal ? null : (endDate ? endDate.toISOString() : null),
+                administracao: administracaoMap[forma],
+                frequencia: `${frequencia}`,
+                inicio: startDate ? startDate.toISOString().split("T")[0] : null,
+                termino: semDataFinal || !endDate ? null : endDate.toISOString().split("T")[0],
                 continuo: Boolean(semDataFinal),
                 observacoes: observacoes.trim(),
+                horasPrevistas: horasPrevistas
             };
 
             const isEdit = Boolean(editingId);
-            const url = isEdit ? `/medicamentos/${payload.id}` : `/medicamentos`;
+            const url = isEdit ? `/medicamentos/${editingId}` : `/medicamentos`;
             const method = isEdit ? api.put : api.post;
 
             const response = await method(url, payload);
 
             if (response && (response.status === 200 || response.status === 201)) {
-                const msg = isEdit ? 'Medicamento atualizado com sucesso!' : `O Medicamento ${payload.nome} foi adicionado com sucesso!`;
-                Alert.alert('Sucesso', msg, [{ text: 'OK', onPress: () => router.back() }]);
-            } else {
-                console.warn('Resposta inesperada do backend', response);
-                Alert.alert('Erro', 'Resposta inesperada do servidor.');
+                Alert.alert(
+                    "Sucesso",
+                    isEdit
+                        ? 'Medicamento atualizado com sucesso!'
+                        : `O Medicamento ${payload.nome} foi adicionado com sucesso!`,
+                    [{ text: "OK", onPress: () => router.back() }]
+                );
             }
+
         } catch (err: any) {
-            console.error('Erro ao salvar medicamento:', err);
+            console.error("Erro ao salvar medicamento:", err);
             const serverMsg = err?.response?.data || err?.message || 'Erro desconhecido';
-            Alert.alert('Erro', `Não foi possível salvar o medicamento.\n${typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg)}`);
+            Alert.alert("Erro", `${serverMsg}`);
         }
     };
 
-    // carregar editMed se presente
     React.useEffect(() => {
-        if (!params || !params.editMed) return;
+        if (!params?.editMed) return;
+
         try {
             let parsed: any = null;
             const raw = params.editMed as string;
+
             try {
                 parsed = JSON.parse(raw);
-            } catch (err) {
+            } catch {
                 try {
-                    const dec = decodeURIComponent(raw);
-                    parsed = JSON.parse(dec);
-                } catch (err2) {
-                    console.warn('Falha ao parsear editMed', err, err2);
-                }
+                    parsed = JSON.parse(decodeURIComponent(raw));
+                } catch { }
             }
+
             if (parsed) {
                 setEditingId(parsed.id ?? null);
                 setNome(parsed.nome ?? '');
@@ -147,9 +156,7 @@ export default function AdicionarMedicamentoScreen() {
                 setEndDate(parsed.endDate ? new Date(parsed.endDate) : null);
                 setSemDataFinal(!!parsed.semDataFinal);
             }
-        } catch (e) {
-            // ignore
-        }
+        } catch { }
     }, [params?.editMed]);
 
     return (
@@ -182,7 +189,7 @@ export default function AdicionarMedicamentoScreen() {
 
                 <Text style={styles.label}>Forma de administração</Text>
                 <View style={styles.formaRow}>
-                    {['Comprimido', 'Gotas', 'Injeção', 'Xarope', 'Cápsula'].map((f) => (
+                    {formasAdministracao.map((f) => (
                         <Pressable
                             key={f}
                             onPress={() => setForma(f)}
@@ -232,7 +239,6 @@ export default function AdicionarMedicamentoScreen() {
                     </Pressable>
                 </View>
 
-                {/* Date/time picker modal - quando showTimePicker true */}
                 {showTimePicker && (
                     <DateTimePicker
                         value={horarioTemp}
@@ -245,7 +251,6 @@ export default function AdicionarMedicamentoScreen() {
                             const hh = String(selected.getHours()).padStart(2, '0');
                             const mm = String(selected.getMinutes()).padStart(2, '0');
                             const timeStr = `${hh}:${mm}`;
-                            setHorarioTemp(selected);
                             setHorarios((prev) => (prev.includes(timeStr) ? prev : [...prev, timeStr]));
                         }}
                     />
@@ -257,6 +262,7 @@ export default function AdicionarMedicamentoScreen() {
                         <Text style={styles.dateText}>{startDate ? startDate.toLocaleDateString() : 'Selecionar data'}</Text>
                     </Pressable>
                 </View>
+
                 {showStartDatePicker && (
                     <DateTimePicker
                         value={startDate ?? new Date()}
@@ -279,6 +285,7 @@ export default function AdicionarMedicamentoScreen() {
                         <Text style={styles.smallBtnText}>{semDataFinal ? '✓' : '—'}</Text>
                     </Pressable>
                 </View>
+
                 {showEndDatePicker && !semDataFinal && (
                     <DateTimePicker
                         value={endDate ?? new Date()}
@@ -303,25 +310,16 @@ export default function AdicionarMedicamentoScreen() {
                     numberOfLines={4}
                 />
 
-                {/* Lembrete
-        <View style={styles.lembreteRow}>
-          <Pressable onPress={() => setLembrete((v) => !v)} style={styles.lembreteBox}>
-            <MaterialCommunityIcons
-              name={lembrete ? 'bell-ring' : 'bell-off-outline'}
-              size={20}
-              color={lembrete ? '#5CA498' : '#999'}
-            />
-          </Pressable>
-          <Text style={styles.lembreteLabel}>Ativar lembrete</Text>
-        </View>
-        */}
-
                 <View style={styles.actions}>
                     <Pressable style={[styles.saveBtn, !isValid && styles.saveBtnDisabled]} onPress={onSave} disabled={!isValid}>
                         <Text style={styles.saveText}>{editingId ? 'Atualizar' : 'Salvar'}</Text>
                     </Pressable>
-                    <Pressable style={styles.cancelBtn} onPress={() => router.back()}><Text style={styles.cancelText}>Cancelar</Text></Pressable>
+
+                    <Pressable style={styles.cancelBtn} onPress={() => router.back()}>
+                        <Text style={styles.cancelText}>Cancelar</Text>
+                    </Pressable>
                 </View>
+
             </ScrollView>
         </SafeAreaView>
     );
@@ -343,14 +341,6 @@ const styles = StyleSheet.create({
     smallBtnText: { fontSize: 18, color: '#333' },
     countBox: { paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#e6e6e6' },
     countText: { fontSize: 16, color: '#333' },
-    lembreteRow: { flexDirection: 'row', alignItems: 'center', marginTop: 14 },
-    lembreteBox: { width: 40, height: 40, borderRadius: 8, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e6e6e6' },
-    lembreteLabel: { marginLeft: 12, fontSize: 15, color: '#333' },
-    actions: { marginTop: 20 },
-    saveBtn: { backgroundColor: '#5CA498', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginBottom: 10 },
-    saveText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-    cancelBtn: { backgroundColor: '#fff', paddingVertical: 12, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#ddd' },
-    cancelText: { color: '#333', fontSize: 16, fontWeight: '600' },
     horariosRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginTop: 8 },
     horarioChipSmall: { backgroundColor: '#E0F2F1', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6, marginRight: 8, marginBottom: 8, flexDirection: 'row', alignItems: 'center' },
     horarioTextSmall: { color: '#00695C', fontWeight: '600' },
@@ -369,4 +359,9 @@ const styles = StyleSheet.create({
     iconChipActive: { backgroundColor: '#E0F2F1', borderColor: '#5CA498' },
     iconLabel: { marginLeft: 8, color: '#333' },
     iconLabelActive: { color: '#00695C', fontWeight: '700' },
+    actions: { marginTop: 20 },
+    saveBtn: { backgroundColor: '#5CA498', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginBottom: 10 },
+    saveText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+    cancelBtn: { backgroundColor: '#fff', paddingVertical: 12, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#ddd' },
+    cancelText: { color: '#333', fontSize: 16, fontWeight: '600' },
 });
