@@ -1,8 +1,28 @@
 import axios from "axios"
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const api = axios.create({
-    //SEMPRE TROCAR ESSE IP
     baseURL: "http://192.168.0.25:8080/api/v1",
-})
+});
+
+const PUBLIC_ROUTES = [
+    "/auth/register",
+    "/auth/login",
+];
+
+api.interceptors.request.use(
+  async (config) => {
+    const token = await AsyncStorage.getItem("token");
+
+    if (!PUBLIC_ROUTES.includes(config.url)) {
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default api;

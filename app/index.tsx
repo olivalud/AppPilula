@@ -8,6 +8,7 @@ import Logo from "../src/assets/logo.png";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { login } from "../services/auth"
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import storage from "@/services/storage";
 
 const iconSize = Platform.OS === 'web' ? 22 : 30;
 
@@ -61,7 +62,8 @@ const InterfaceDeLoginImage = () => {
                             try {
                                 const cpfNumbers = cpf.replace(/\D/g, "")
                                 const data = await login(cpfNumbers, password)
-                                await AsyncStorage.setItem("token", data.token)
+                                await storage.setItem("token", data.token)
+                                console.log("TOKEN SALVO:", await storage.getItem("token"))
                                 router.push("/home");
                             } catch (error) {
                                 console.log("erro ao fazer login:", error);
