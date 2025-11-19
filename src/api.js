@@ -8,5 +8,3 @@
 //     }
 //     return "192.168.0.21"
 // };
-
-// export const API_URL = `http://${getHostIp()}:8080`;
