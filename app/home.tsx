@@ -751,12 +751,12 @@ const styles = StyleSheet.create({
         marginLeft: 10,
     },
     userName: {
-        fontSize: 24,
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#333',
     },
     date: {
-        fontSize: 20,
+        fontSize: 15,
         color: '#777',
     },
     summaryContainer: {
