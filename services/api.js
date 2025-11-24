@@ -11,18 +11,20 @@ const PUBLIC_ROUTES = [
 ];
 
 api.interceptors.request.use(
-  async (config) => {
-    const token = await AsyncStorage.getItem("token");
+    async (config) => {
+        const token = await AsyncStorage.getItem("token");
 
-    if (!PUBLIC_ROUTES.includes(config.url)) {
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
+        const isPublic = PUBLIC_ROUTES.some(route =>
+            config.url && config.url.includes(route)
+        );
 
-    return config;
-  },
-  (error) => Promise.reject(error)
+        if (!isPublic && token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+
+        return config;
+    },
+    (error) => Promise.reject(error)
 );
 
 export default api;
