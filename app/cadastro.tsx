@@ -50,7 +50,7 @@ const InterfaceDeCadastro = () => {
         } catch (error: unknown) {
             if (axios.isAxiosError(error)) {
                 console.log("erro no registro:", error.response?.data || error.message);
-                alert(error.response?.data?.message || "Erro ao cadastrar (axios)");
+                alert(error.response?.data?.message || `Erro ao cadastrar ${error}`);
             } else if (error instanceof Error) {
                 console.log("erro no registro:", error.message);
                 alert(error.message);
