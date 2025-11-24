@@ -484,7 +484,9 @@ export default function HomeScreen() {
         setMenuMed(med);
         setMenuX(x);
         setMenuY(y);
-        setMenuVisible(true);
+        setTimeout(() => {
+            setMenuVisible(true);
+        }, 764); 
     };
 
     const closeMenu = () => {
@@ -702,18 +704,30 @@ export default function HomeScreen() {
             </View>
 
             {menuVisible && menuMed && (
-                <Pressable style={styles.menuOverlay} onPress={closeMenu}>
+                <View style={styles.menuOverlay} pointerEvents="box-none">
+
+                    <Pressable style={StyleSheet.absoluteFill} onPress={closeMenu} />
+
                     <View style={[styles.menuBox, { top: menuY - 60, left: Math.max(8, menuX - 120) }]}>
-                        <Pressable style={styles.menuItem} onPress={() => handleEditFromMenu(menuMed)}>
+
+                        <Pressable
+                            style={styles.menuItem}
+                            onPress={() => handleEditFromMenu(menuMed)}
+                        >
                             <MaterialCommunityIcons name="pencil" size={18} color="#2E7D32" />
                             <Text style={styles.menuText}>Editar</Text>
                         </Pressable>
-                        <Pressable style={styles.menuItem} onPress={() => handleDeleteFromMenu(menuMed)}>
+
+                        <Pressable
+                            style={styles.menuItem}
+                            onPress={() => handleDeleteFromMenu(menuMed)}
+                        >
                             <MaterialCommunityIcons name="delete-outline" size={18} color="#D32F2F" />
                             <Text style={[styles.menuText, { color: '#D32F2F' }]}>Excluir</Text>
                         </Pressable>
+
                     </View>
-                </Pressable>
+                </View>
             )}
 
             {snackbarVisible && (
