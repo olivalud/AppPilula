@@ -486,7 +486,7 @@ export default function HomeScreen() {
         setMenuY(y);
         setTimeout(() => {
             setMenuVisible(true);
-        }, 764); 
+        }, 764);
     };
 
     const closeMenu = () => {
