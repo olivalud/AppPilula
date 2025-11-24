@@ -21,7 +21,7 @@ type FormaAdministracao = 'Comprimido' | 'Gotas' | 'Injeção' | 'Xarope' | 'Cá
 
 const administracaoMap: Record<FormaAdministracao, string> = {
     Comprimido: "COMPRIMIDO",
-    Gotas: "GOTAS",
+    Gotas: "GOTA",
     Injeção: "INJECAO",
     Xarope: "XAROPE",
     Cápsula: "CAPSULA"

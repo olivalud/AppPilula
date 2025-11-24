@@ -87,11 +87,17 @@ export default function HomeScreen() {
             const nome = m.nome ?? m.raw?.nome ?? '';
             const horarios = Array.isArray(m.horarios) ? m.horarios : (Array.isArray(m.raw?.horarios) ? m.raw.horasPrevistas.map((h: string) => h.slice(0, 5)) : []);
             const status = (m.status ?? 'pendente') as UIManagableMed['status'];
+            const iconMap = new Map([
+                ['COMPRIMIDO', 'pill'],
+                ['INJECAO', 'needle'],
+                ['GOTA', 'water'],
+                ['XAROPE', 'bottle-soda']
+            ]);
             return {
                 id,
                 nome,
                 dose: m.dose ?? m.raw?.dosagem ?? '',
-                icone: m.icone ?? 'pill',
+                icone: iconMap.get(m.raw.administracao) ?? iconMap.get('COMPRIMIDO'),
                 horarios,
                 status,
                 aviso: m.aviso ?? '',
