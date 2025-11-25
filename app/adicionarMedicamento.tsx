@@ -111,13 +111,7 @@ export default function AdicionarMedicamentoScreen() {
             const response = await method(url, payload);
 
             if (response && (response.status === 200 || response.status === 201)) {
-                Alert.alert(
-                    "Sucesso",
-                    isEdit
-                        ? 'Medicamento atualizado com sucesso!'
-                        : `O Medicamento ${payload.nome} foi adicionado com sucesso!`,
-                    [{ text: "OK", onPress: () => router.back() }]
-                );
+                router.replace("/home");
             }
 
         } catch (err: any) {
@@ -176,7 +170,7 @@ export default function AdicionarMedicamentoScreen() {
                         </View>
                         <Text style={styles.title}>{editingId ? 'Editar Medicamento' : 'Adicionar Medicamento'}</Text>
                     </View>
-                    <Pressable onPress={() => router.back()} style={styles.closeButton}>
+                    <Pressable onPress={() => router.replace("/home")} style={styles.closeButton}>
                         <MaterialCommunityIcons name="close" size={22} color="#333" />
                     </Pressable>
                 </View>
